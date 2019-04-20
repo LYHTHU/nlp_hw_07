@@ -4,11 +4,18 @@ import os
 class FeatureBuilder:
     def __init__(self, input_path = "./CONLL_train.pos-chunk-name", train_mode = True):
         self.out_path = input_path[input_path.rfind("/")+1: input_path.rfind(".")] + ".feature"
+        self.word_embedding_filepath = "./glove.6B/glove.6B.50d.txt"
         self.in_file = open(input_path, 'r')
         self.out_file = open(self.out_path, 'w')
+        self.wbf = open(self.word_embedding_filepath, 'r')
+        self.wb = {}
         self.train_mode = train_mode
-
         self.write_count = 0
+        self.count_embed_word = 0
+        self.count_word = 0
+# TODO: try thresholds.
+        self.threshold = 0.3
+
 
     @staticmethod
     def exec_line(line):
@@ -26,9 +33,18 @@ class FeatureBuilder:
         ret = ret + "\n"
         self.out_file.write(ret)
 
+    def get_word_embed(self):
+        lines = self.wbf.readlines()
+        for line in lines:
+            line = line.split(" ")
+            token = line[0]
+            feature = [float(i) for i in line[1:]]
+            self.wb[token] = feature
+
     def close_file(self):
         self.in_file.close()
         self.out_file.close()
+        self.wbf.close()
 
     def exec_sentence(self, sentence):
         length = len(sentence)
@@ -78,7 +94,6 @@ class FeatureBuilder:
                 # disable some feature
                 for i in range(4):
                     enable_list[i] = 0
-                #
 
             feature = list(f for i, f in enumerate(all_feature) if enable_list[i])
 
@@ -97,10 +112,16 @@ class FeatureBuilder:
         self.out_file.write("\n")
 
     def add_word_embedding(self, word, threshold):
-        ret = [0 for i in range(50)]
+        self.count_word += 1
+        if word in self.wb:
+            self.count_embed_word += 1
+            ret = [(i > self.threshold)*1 for i in self.wb[word]]
+        else:
+            ret = [0 for i in range(50)]
         return ret
 
     def run(self):
+        self.get_word_embed()
         sentence = []
         count = 0
         count_line = 0
@@ -122,6 +143,8 @@ class FeatureBuilder:
         self.close_file()
         print("There is ", count_line, "lines in training file.")
         print("There is ", count, "sentences in training file.")
+        print("There is ", self.count_word, "word in training file.")
+        print("There is ", self.count_embed_word, "word in glove6B.50d.txt.")
 
 
 if __name__ == '__main__':
