@@ -62,9 +62,9 @@ class FeatureBuilder:
             self.wb[token] = feature
 
             if self.train_mode:
-                if i / len(lines) - lst > 0.01:
+                if i / len(lines) - lst > 0.05:
                     lst = i / len(lines)
-                    print("Trained: ", int(lst*100), "%")
+                    print("Read and process embedding file: ", int(lst*100), "%")
                 if self.mode == "bin_mean":
                     for i, val in enumerate(feature):
                         if val > 0:
@@ -243,7 +243,7 @@ class FeatureBuilder:
 
 
 if __name__ == '__main__':
-    inmode = "bin_mean"
+    inmode = "cluster"
     builder = FeatureBuilder(model=None, mode = inmode, train_mode=True)
     builder.run()
 
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + dev_feature + " " + model_name + " " + dev_out)
     os.system("python3 score.name.py")
 
-    builder_test = FeatureBuilder(input_path=test_name, mode=inmode, train_mode=False, model=builder.get_model())
-    builder_test.run()
-    os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + test_feature + " " + model_name + " " + test_out)
+    # builder_test = FeatureBuilder(input_path=test_name, mode=inmode, train_mode=False, model=builder.get_model())
+    # builder_test.run()
+    # os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + test_feature + " " + model_name + " " + test_out)
 
