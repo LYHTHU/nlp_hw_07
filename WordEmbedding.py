@@ -20,7 +20,7 @@ class FeatureBuilder:
 
 # TODO: try thresholds.
         self.threshold = 0.01
-        self.N_cluster = 15
+        self.N_cluster = 40
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
 
@@ -141,7 +141,7 @@ class FeatureBuilder:
             elif self.mode == "bin":
                 feature.extend(self.add_word_embedding_bin(token))
             elif self.mode == "cluster":
-                feature.extend(self.add_word_embedding_cluster(token))
+                feature.append(self.add_word_embedding_cluster(token))
 
             feature_size = len(feature)
 
@@ -204,14 +204,14 @@ class FeatureBuilder:
     def add_word_embedding_cluster(self, word):
         if word in self.wb:
             vec = self.wb[word]
-            ret = [self.kmeans.predict(vec.reshape(1, -1))]
+            ret = self.kmeans.predict(vec.reshape(1, -1))
         else:
             word = word.lower()
             if word in self.wb:
                 vec = self.wb[word]
-                ret = [self.kmeans.predict(vec.reshape(1, -1))]
+                ret = self.kmeans.predict(vec.reshape(1, -1))
             else:
-                ret = [self.N_cluster+1]
+                ret = self.N_cluster+1
         return ret
 
     def run(self):

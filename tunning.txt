@@ -1,0 +1,6 @@
+N_cluster = 10: F1 = 84.32 <br>
+N_cluster = 15: F1 = 84.52 <br>
+N_cluster = 18: F1 = 84.91 <br>
+N_cluster = 20: F1 = 84.94 <br>
+N_cluster = 22: F1 = 84.86 <br>
+N_cluster = 30: F1 = 84.77 <br>
