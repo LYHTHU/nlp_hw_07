@@ -16,8 +16,8 @@ class FeatureBuilder:
         self.count_word = 0
 # TODO: try thresholds.
         self.threshold = 0.3
-        self.trshd = np.zeros(50)
-
+        self.trshd_pos = np.zeros(50)
+        self.trshd_neg = np.zeros(50)
 
     @staticmethod
     def exec_line(line):
@@ -37,14 +37,27 @@ class FeatureBuilder:
 
     def get_word_embed(self):
         lines = self.wbf.readlines()
+        count_pos = np.zeros(50)
+        count_neg = np.zeros(50)
+
         for line in lines:
             line = line.split(" ")
             token = line[0]
-            feature = [float(i) for i in line[1:]]
+            feature = np.asarray([float(i) for i in line[1:]])
+            for i, val in enumerate(feature):
+                if val > 0:
+                    count_pos[i] += 1
+                    self.trshd_pos[i] += val
+                else:
+                    count_neg[i] += 1
+                    self.trshd_neg[i] += val
             self.wb[token] = feature
-            self.trshd += np.asarray(feature)
-        self.trshd /= len(lines)
-        print(self.trshd)
+
+        self.trshd_pos = self.trshd_pos / count_pos
+        self.trshd_neg = self.trshd_neg / count_neg
+        print(count_pos)
+        print(count_neg)
+
 
     def close_file(self):
         self.in_file.close()
@@ -120,7 +133,7 @@ class FeatureBuilder:
         self.count_word += 1
         if word in self.wb:
             self.count_embed_word += 1
-            ret = [(i > self.trshd[index]) * 1 for index, i in enumerate(self.wb[word])]
+            ret = [(i > self.trshd_pos[index])*1 + (i < -self.trshd_neg[index]) for index, i in enumerate(self.wb[word])]
         else:
             ret = [0 for i in range(50)]
         return ret
@@ -129,7 +142,7 @@ class FeatureBuilder:
         self.count_word += 1
         if word in self.wb:
             self.count_embed_word += 1
-            ret = [(i > self.threshold)*1 for i in self.wb[word]]
+            ret = [(i > self.threshold)*1 + (i < -self.threshold)*(-1) for i in self.wb[word]]
         else:
             ret = [0 for i in range(50)]
         return ret
