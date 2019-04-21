@@ -12,3 +12,6 @@
    + Implemented the binarization described in _Revisiting Embedding Features for Simple Semi-supervised Learning_.
    + Implemented the cluster method.
 
+## Required library
+   + sklearn
+   + numpy

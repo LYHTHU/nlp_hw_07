@@ -1,5 +1,6 @@
 import os
 import sklearn as skl
+from sklearn.cluster import KMeans
 import numpy as np
 
 class FeatureBuilder:
@@ -17,6 +18,7 @@ class FeatureBuilder:
         self.mode = mode
 # TODO: try thresholds.
         self.threshold = 0.01
+        self.N_cluster = 1000
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
 
@@ -162,10 +164,19 @@ class FeatureBuilder:
 
     def train_cluster(self):
         if self.mode == "cluster":
-            pass
+            self.kmeans = KMeans(n_clusters=self.N_cluster.fit(X)
 
     def add_word_embedding_cluster(self, word):
-        ret = [0]
+        if word in self.wb:
+            vec = self.wb[word]
+            ret = [self.kmeans.predict(vec)]
+        else:
+            word = word.lower()
+            if word in self.wb:
+                vec = self.wb[word]
+                ret = [self.kmeans.predict(vec)]
+            else:
+                ret = [self.N_cluster+1]
         return ret
 
     def run(self):
