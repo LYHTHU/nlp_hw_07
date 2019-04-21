@@ -204,12 +204,12 @@ class FeatureBuilder:
     def add_word_embedding_cluster(self, word):
         if word in self.wb:
             vec = self.wb[word]
-            ret = [self.kmeans.predict(vec)]
+            ret = [self.kmeans.predict(vec.reshape(1, -1))]
         else:
             word = word.lower()
             if word in self.wb:
                 vec = self.wb[word]
-                ret = [self.kmeans.predict(vec)]
+                ret = [self.kmeans.predict(vec.reshape(1, -1))]
             else:
                 ret = [self.N_cluster+1]
         return ret
