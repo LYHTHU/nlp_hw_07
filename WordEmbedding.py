@@ -1,5 +1,6 @@
 import os
-
+import scipy as sp
+import numpy as np
 
 class FeatureBuilder:
     def __init__(self, input_path = "./CONLL_train.pos-chunk-name", train_mode = True):
@@ -15,6 +16,7 @@ class FeatureBuilder:
         self.count_word = 0
 # TODO: try thresholds.
         self.threshold = 0.3
+        self.trshd = np.zeros(50)
 
 
     @staticmethod
@@ -40,6 +42,9 @@ class FeatureBuilder:
             token = line[0]
             feature = [float(i) for i in line[1:]]
             self.wb[token] = feature
+            self.trshd += np.asarray(feature)
+        self.trshd /= len(lines)
+        print(self.trshd)
 
     def close_file(self):
         self.in_file.close()
@@ -97,7 +102,7 @@ class FeatureBuilder:
 
             feature = list(f for i, f in enumerate(all_feature) if enable_list[i])
 
-            feature.append(self.add_word_embedding(token, self.threshold))
+            feature.append(self.add_word_embedding_bin(token))
 
             feature_size = len(feature)
 
@@ -111,7 +116,16 @@ class FeatureBuilder:
 
         self.out_file.write("\n")
 
-    def add_word_embedding(self, word, threshold):
+    def add_word_embedding_bin_mean(self, word):
+        self.count_word += 1
+        if word in self.wb:
+            self.count_embed_word += 1
+            ret = [(i > self.trshd[index]) * 1 for index, i in enumerate(self.wb[word])]
+        else:
+            ret = [0 for i in range(50)]
+        return ret
+
+    def add_word_embedding_bin(self, word):
         self.count_word += 1
         if word in self.wb:
             self.count_embed_word += 1
