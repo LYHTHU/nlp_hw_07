@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 import numpy as np
 
 class FeatureBuilder:
-    def __init__(self, input_path = "./CONLL_train.pos-chunk-name", mode = "bin", train_mode = True):
+    def __init__(self, model, input_path = "./CONLL_train.pos-chunk-name", mode = "bin", train_mode = True):
         self.out_path = input_path[input_path.rfind("/")+1: input_path.rfind(".")] + ".feature"
         self.word_embedding_filepath = "./glove.6B/glove.6B.50d.txt"
         self.in_file = open(input_path, 'r')
@@ -16,11 +16,23 @@ class FeatureBuilder:
         self.count_embed_word = 0
         self.count_word = 0
         self.mode = mode
+        self.kmeans = None
+
 # TODO: try thresholds.
         self.threshold = 0.01
-        self.N_cluster = 1000
+        self.N_cluster = 10
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
+
+
+        if not self.train_mode:
+            if not model and self.mode != "bin":
+                print("Error: No model inputed.")
+                exit(1)
+            if self.mode == "bin_mean":
+                self.trshd_pos, self.trshd_neg = model[0], model[1]
+            elif self.mode == "cluster":
+                self.kmeans = model
 
     @staticmethod
     def exec_line(line):
@@ -42,24 +54,28 @@ class FeatureBuilder:
         lines = self.wbf.readlines()
         count_pos = np.zeros(50)
         count_neg = np.zeros(50)
-
-        for line in lines:
+        lst = 0
+        for i, line in enumerate(lines):
             line = line.split(" ")
             token = line[0]
             feature = np.asarray([float(i) for i in line[1:]])
             self.wb[token] = feature
 
-            if self.mode == "bin_mean":
-                for i, val in enumerate(feature):
-                    if val > 0:
-                        count_pos[i] += 1
-                        self.trshd_pos[i] += val
-                    else:
-                        count_neg[i] += 1
-                        self.trshd_neg[i] += val
+            if self.train_mode:
+                if i / len(lines) - lst > 0.01:
+                    lst = i / len(lines)
+                    print("Trained: ", int(lst*100), "%")
+                if self.mode == "bin_mean":
+                    for i, val in enumerate(feature):
+                        if val > 0:
+                            count_pos[i] += 1
+                            self.trshd_pos[i] += val
+                        else:
+                            count_neg[i] += 1
+                            self.trshd_neg[i] += val
 
 
-        if self.mode == "bin_mean":
+        if self.mode == "bin_mean" and self.train_mode:
             self.trshd_pos = self.trshd_pos / count_pos
             self.trshd_neg = self.trshd_neg / count_neg
 
@@ -153,6 +169,20 @@ class FeatureBuilder:
                 ret = [0 for i in range(50)]
         return ret
 
+    def get_trshd(self):
+        return (self.trshd_pos, self.trshd_neg)
+
+    def get_kmeans(self):
+        return self.kmeans
+
+    def get_model(self):
+        if self.mode == "bin_mean":
+            return self.get_trshd()
+        elif self.mode == "cluster":
+            return self.get_kmeans()
+        else:
+            return None
+
     def add_word_embedding_bin(self, word):
         self.count_word += 1
         if word in self.wb:
@@ -163,8 +193,13 @@ class FeatureBuilder:
         return ret
 
     def train_cluster(self):
-        if self.mode == "cluster":
-            self.kmeans = KMeans(n_clusters=self.N_cluster.fit(X)
+        if self.mode == "cluster" and self.train_mode:
+            X = []
+            for key in self.wb:
+                X.append(self.wb[key])
+            print("Start train kmeans")
+            self.kmeans = KMeans(n_clusters=self.N_cluster).fit(X)
+            print("Finish train kmeans")
 
     def add_word_embedding_cluster(self, word):
         if word in self.wb:
@@ -181,6 +216,7 @@ class FeatureBuilder:
 
     def run(self):
         self.get_word_embed()
+        self.train_cluster()
         sentence = []
         count = 0
         count_line = 0
@@ -207,8 +243,8 @@ class FeatureBuilder:
 
 
 if __name__ == '__main__':
-    inmode = "bin"
-    builder = FeatureBuilder(mode = inmode, train_mode=True)
+    inmode = "bin_mean"
+    builder = FeatureBuilder(model=None, mode = inmode, train_mode=True)
     builder.run()
 
     if not (os.path.exists("MEtrain.class") and os.path.exists("MEtag.class")):
@@ -225,13 +261,13 @@ if __name__ == '__main__':
 
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtrain " + builder.out_path + " " + model_name)
 
-    builder = FeatureBuilder(input_path=dev_name, mode = inmode, train_mode=False)
-    builder.run()
+    builder_dev = FeatureBuilder(input_path=dev_name, mode=inmode, train_mode=False, model=builder.get_model())
+    builder_dev.run()
 
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + dev_feature + " " + model_name + " " + dev_out)
     os.system("python3 score.name.py")
 
-    builder_test = FeatureBuilder(input_path=inmode, mode = inmode, train_mode=False)
+    builder_test = FeatureBuilder(input_path=test_name, mode=inmode, train_mode=False, model=builder.get_model())
     builder_test.run()
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + test_feature + " " + model_name + " " + test_out)
 
