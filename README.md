@@ -9,7 +9,8 @@
     
   + With cluster:<br>
     N_cluster = 20<br>
-    F1 = 84.94
+    F1 = 84.94<br>
+    **Note:** the result of cluster is not fixed every time. Because the K-means has some stochastic process.
 ## Base
    + Implemented the binarization with a fixed threshold.<br>
    I use a single threshold to binarilize all 50 dimensions.<br>
