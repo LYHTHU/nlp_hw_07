@@ -3,7 +3,7 @@ import scipy as sp
 import numpy as np
 
 class FeatureBuilder:
-    def __init__(self, input_path = "./CONLL_train.pos-chunk-name", train_mode = True):
+    def __init__(self, input_path = "./CONLL_train.pos-chunk-name", mode = "bin", train_mode = True):
         self.out_path = input_path[input_path.rfind("/")+1: input_path.rfind(".")] + ".feature"
         self.word_embedding_filepath = "./glove.6B/glove.6B.50d.txt"
         self.in_file = open(input_path, 'r')
@@ -14,8 +14,9 @@ class FeatureBuilder:
         self.write_count = 0
         self.count_embed_word = 0
         self.count_word = 0
+        self.mode = mode
 # TODO: try thresholds.
-        self.threshold = 0.3
+        self.threshold = 0.1
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
 
@@ -44,18 +45,21 @@ class FeatureBuilder:
             line = line.split(" ")
             token = line[0]
             feature = np.asarray([float(i) for i in line[1:]])
-
-            for i, val in enumerate(feature):
-                if val > 0:
-                    count_pos[i] += 1
-                    self.trshd_pos[i] += val
-                else:
-                    count_neg[i] += 1
-                    self.trshd_neg[i] += val
             self.wb[token] = feature
 
-        self.trshd_pos = self.trshd_pos / count_pos
-        self.trshd_neg = self.trshd_neg / count_neg
+            if self.mode == "bin_mean":
+                for i, val in enumerate(feature):
+                    if val > 0:
+                        count_pos[i] += 1
+                        self.trshd_pos[i] += val
+                    else:
+                        count_neg[i] += 1
+                        self.trshd_neg[i] += val
+
+
+        if self.mode == "bin_mean":
+            self.trshd_pos = self.trshd_pos / count_pos
+            self.trshd_neg = self.trshd_neg / count_neg
 
 
     def close_file(self):
@@ -114,7 +118,11 @@ class FeatureBuilder:
 
             feature = list(f for i, f in enumerate(all_feature) if enable_list[i])
 
-            feature.extend(self.add_word_embedding_bin_mean(token))
+            if self.mode == "bin_mean":
+                feature.extend(self.add_word_embedding_bin_mean(token))
+            elif self.mode == "bin":
+                feature.extend(self.add_word_embedding_bin(token))
+
 
             feature_size = len(feature)
 
@@ -151,6 +159,12 @@ class FeatureBuilder:
             ret = [0 for i in range(50)]
         return ret
 
+    def train_cluster(self):
+        pass
+
+    def add_word_embedding_cluster(self, word):
+        pass
+
     def run(self):
         self.get_word_embed()
         sentence = []
@@ -179,7 +193,7 @@ class FeatureBuilder:
 
 
 if __name__ == '__main__':
-    builder = FeatureBuilder(train_mode=True)
+    builder = FeatureBuilder(mode = "bin", train_mode=True)
     builder.run()
 
     if not (os.path.exists("MEtrain.class") and os.path.exists("MEtag.class")):
@@ -196,13 +210,13 @@ if __name__ == '__main__':
 
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtrain " + builder.out_path + " " + model_name)
 
-    builder = FeatureBuilder(input_path=dev_name, train_mode=False)
+    builder = FeatureBuilder(input_path=dev_name, mode = "bin", train_mode=False)
     builder.run()
 
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + dev_feature + " " + model_name + " " + dev_out)
     os.system("python3 score.name.py")
 
-    builder_test = FeatureBuilder(input_path=test_name, train_mode=False)
+    builder_test = FeatureBuilder(input_path=test_name, mode = "bin", train_mode=False)
     builder_test.run()
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + test_feature + " " + model_name + " " + test_out)
 
