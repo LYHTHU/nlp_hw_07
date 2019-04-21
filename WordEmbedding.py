@@ -44,6 +44,7 @@ class FeatureBuilder:
             line = line.split(" ")
             token = line[0]
             feature = np.asarray([float(i) for i in line[1:]])
+
             for i, val in enumerate(feature):
                 if val > 0:
                     count_pos[i] += 1
@@ -55,8 +56,6 @@ class FeatureBuilder:
 
         self.trshd_pos = self.trshd_pos / count_pos
         self.trshd_neg = self.trshd_neg / count_neg
-        print(count_pos)
-        print(count_neg)
 
 
     def close_file(self):
@@ -115,7 +114,7 @@ class FeatureBuilder:
 
             feature = list(f for i, f in enumerate(all_feature) if enable_list[i])
 
-            feature.append(self.add_word_embedding_bin(token))
+            feature.extend(self.add_word_embedding_bin_mean(token))
 
             feature_size = len(feature)
 
@@ -135,7 +134,12 @@ class FeatureBuilder:
             self.count_embed_word += 1
             ret = [(i > self.trshd_pos[index])*1 + (i < -self.trshd_neg[index]) for index, i in enumerate(self.wb[word])]
         else:
-            ret = [0 for i in range(50)]
+            word = word.lower()
+            if word in self.wb:
+                self.count_embed_word += 1
+                ret = [(i > self.trshd_pos[index]) * 1 + (i < -self.trshd_neg[index]) for index, i in enumerate(self.wb[word])]
+            else:
+                ret = [0 for i in range(50)]
         return ret
 
     def add_word_embedding_bin(self, word):
