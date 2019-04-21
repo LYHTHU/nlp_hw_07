@@ -20,7 +20,7 @@ class FeatureBuilder:
 
 # TODO: try thresholds.
         self.threshold = 0.01
-        self.N_cluster = 10
+        self.N_cluster = 15
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
 
