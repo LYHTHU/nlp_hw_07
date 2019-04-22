@@ -2,11 +2,14 @@
 #### Yunhao Li, NetID: yl6220
 
 ## Best dev score with and without the embeddings
-+ Without embeddings: F1 = 82.93
-+ With embeddings(fixed threshold): F1 = 
++ Without embeddings: F1 = 82.93<br>
+    <br>
++ With embeddings(fixed threshold): F1 = 80.29<br>
+    <br>
 + With additional methods and embeddings: 
-  + With binarization:
-    
+  + With binarization:<br>
+    F1 = 80.01<br>
+    <br>
   + With cluster:<br>
     N_cluster = 20<br>
     F1 = 84.94<br>
@@ -15,8 +18,8 @@
    + Implemented the binarization with a fixed threshold.<br>
    I use a single threshold to binarilize all 50 dimensions.<br>
    And the threshold I find best is:<br>
-   Threshold = 0.1
-   F1 = 
+   Threshold = 0.18<br>
+   F1 = 80.29
    
 ## The additional methods:
    + Implemented the binarization described in _Revisiting Embedding Features for Simple Semi-supervised Learning_.

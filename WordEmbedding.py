@@ -19,7 +19,7 @@ class FeatureBuilder:
         self.kmeans = None
 
 # TODO: try thresholds.
-        self.threshold = 0.05
+        self.threshold = 0.18
         self.N_cluster = 20
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
@@ -244,7 +244,7 @@ class FeatureBuilder:
 
 
 if __name__ == '__main__':
-    inmode = "bin_mean"
+    inmode = "bin"
     print("mode is", inmode)
     builder = FeatureBuilder(model=None, mode=inmode, train_mode=True)
     builder.run()
