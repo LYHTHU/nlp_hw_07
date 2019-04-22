@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 import numpy as np
 
 class FeatureBuilder:
-    def __init__(self, model, input_path = "./CONLL_train.pos-chunk-name", mode = "bin", train_mode = True):
+    def __init__(self, model, input_path="./CONLL_train.pos-chunk-name", mode="bin", train_mode=True):
         self.out_path = input_path[input_path.rfind("/")+1: input_path.rfind(".")] + ".feature"
         self.word_embedding_filepath = "./glove.6B/glove.6B.50d.txt"
         self.in_file = open(input_path, 'r')
@@ -19,11 +19,10 @@ class FeatureBuilder:
         self.kmeans = None
 
 # TODO: try thresholds.
-        self.threshold = 0.01
-        self.N_cluster = 40
+        self.threshold = 0.05
+        self.N_cluster = 20
         self.trshd_pos = np.zeros(50)
         self.trshd_neg = np.zeros(50)
-
 
         if not self.train_mode:
             if not model and self.mode != "bin":
@@ -74,11 +73,9 @@ class FeatureBuilder:
                             count_neg[i] += 1
                             self.trshd_neg[i] += val
 
-
         if self.mode == "bin_mean" and self.train_mode:
             self.trshd_pos = self.trshd_pos / count_pos
             self.trshd_neg = self.trshd_neg / count_neg
-
 
     def close_file(self):
         self.in_file.close()
@@ -170,7 +167,7 @@ class FeatureBuilder:
         return ret
 
     def get_trshd(self):
-        return (self.trshd_pos, self.trshd_neg)
+        return self.trshd_pos, self.trshd_neg
 
     def get_kmeans(self):
         return self.kmeans
@@ -189,7 +186,11 @@ class FeatureBuilder:
             self.count_embed_word += 1
             ret = [(i > self.threshold)*1 + (i < -self.threshold)*(-1) for i in self.wb[word]]
         else:
-            ret = [0 for i in range(50)]
+            word = word.lower()
+            if word in self.wb:
+                ret = [(i > self.threshold) * 1 + (i < -self.threshold) * (-1) for i in self.wb[word]]
+            else:
+                ret = ["N" for i in range(50)]
         return ret
 
     def train_cluster(self):
@@ -243,8 +244,9 @@ class FeatureBuilder:
 
 
 if __name__ == '__main__':
-    inmode = "cluster"
-    builder = FeatureBuilder(model=None, mode = inmode, train_mode=True)
+    inmode = "bin_mean"
+    print("mode is", inmode)
+    builder = FeatureBuilder(model=None, mode=inmode, train_mode=True)
     builder.run()
 
     if not (os.path.exists("MEtrain.class") and os.path.exists("MEtag.class")):
