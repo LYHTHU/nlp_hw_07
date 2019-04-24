@@ -182,15 +182,30 @@ class FeatureBuilder:
 
     def add_word_embedding_bin(self, word):
         self.count_word += 1
+        # ret = []
         if word in self.wb:
             self.count_embed_word += 1
             ret = [(i > self.threshold)*1 + (i < -self.threshold)*(-1) for i in self.wb[word]]
+            # for i in self.wb[word]:
+            #     if i > self.threshold:
+            #         ret.append("P")
+            #     elif i < (-1) * self.threshold:
+            #         ret.append("N")
+            #     else:
+            #         ret.append("0")
         else:
             word = word.lower()
             if word in self.wb:
                 ret = [(i > self.threshold) * 1 + (i < -self.threshold) * (-1) for i in self.wb[word]]
+                # for i in self.wb[word]:
+                #     if i > self.threshold:
+                #         ret.append("P")
+                #     elif i < (-1) * self.threshold:
+                #         ret.append("N")
+                #     else:
+                #         ret.append("0")
             else:
-                ret = ["N" for i in range(50)]
+                ret = ["0" for i in range(50)]
         return ret
 
     def train_cluster(self):
@@ -244,7 +259,7 @@ class FeatureBuilder:
 
 
 if __name__ == '__main__':
-    inmode = "bin"
+    inmode = "cluster"
     print("mode is", inmode)
     builder = FeatureBuilder(model=None, mode=inmode, train_mode=True)
     builder.run()
@@ -269,7 +284,7 @@ if __name__ == '__main__':
     os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + dev_feature + " " + model_name + " " + dev_out)
     os.system("python3 score.name.py")
 
-    # builder_test = FeatureBuilder(input_path=test_name, mode=inmode, train_mode=False, model=builder.get_model())
-    # builder_test.run()
-    # os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + test_feature + " " + model_name + " " + test_out)
+    builder_test = FeatureBuilder(input_path=test_name, mode=inmode, train_mode=False, model=builder.get_model())
+    builder_test.run()
+    os.system("java -cp .:./maxent-3.0.0.jar:trove.jar MEtag " + test_feature + " " + model_name + " " + test_out)
 

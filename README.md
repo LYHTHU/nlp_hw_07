@@ -37,3 +37,12 @@
 ## Required library
    + sklearn
    + numpy
+   
+## Running
+   Create a folder named `./glove.6B`, and move the `glove.6B.50d.txt` into it. Put the corpus files and `MEtag.java` and `MEtrain.java` and 
+   and the required jar file in `./`. Set the `inmode` in the `WordEmbedding.py` to set the embedding methods.
+   + "bin"      -> Binariazation method with fixed threshold
+   + "bin_mean" -> Additional binariazation method with mean-value threshold
+   + "cluster"  -> Cluster methods with K-means.<br>
+   
+   Then run the `WordEmbedding.py`. 
