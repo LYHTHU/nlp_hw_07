@@ -1,5 +1,5 @@
 # NLP Homework 07
-#### Yunhao Li, NetID: yl6220
+#### Yunhao Li, NetID: 
 
 ## Best dev score with and without the embeddings
 + Without embeddings: F1 = 82.93<br>
